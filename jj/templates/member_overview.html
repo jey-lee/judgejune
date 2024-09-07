@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Member Overview</title>
+    {% load static %}
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Member Overview</h1>
+        <p class="text-center">Welcome, {{ user.username }}!</p>
+        <div class="text-center mt-4">
+            <a href="{% url 'logout' %}" class="btn btn-danger">Sign Out</a>
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'edit_session' %}" class="btn btn-primary" target="_blank">Create Session</a>
+        </div>
+        <h2 class="mt-5">Past Sessions</h2>
+        <ul class="list-group">
+            {% for session in sessions %}
+                <li class="list-group-item">
+                    <h5><a href="{% url 'edit_session' session.id %}">{{ session.name }}</a></h5>
+                    <p><strong>Resolution:</strong> {{ session.resolution }}</p>
+                    <p><strong>Details:</strong> {{ session.details }}</p>
+                    <p><strong>Created at:</strong> {{ session.created_at }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

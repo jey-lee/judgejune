@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Session</title>
+    {% load static %}
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Edit Session</h1>
+        <form id="edit-session-form" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ form.name.value }}">
+            </div>
+            <div class="form-group">
+                <label for="resolution">Resolution</label>
+                <input type="text" class="form-control" id="resolution" name="resolution" value="{{ form.resolution.value }}">
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="aff_speaker1">Affirmative Speaker 1</label>
+                        <input type="text" class="form-control" id="aff_speaker1" name="aff_speaker1" value="{{ form.aff_speaker1.value }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="aff_speaker2">Affirmative Speaker 2</label>
+                        <input type="text" class="form-control" id="aff_speaker2" name="aff_speaker2" value="{{ form.aff_speaker2.value }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="con_speaker1">Negative Speaker 1</label>
+                        <input type="text" class="form-control" id="con_speaker1" name="con_speaker1" value="{{ form.con_speaker1.value }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="con_speaker2">Negative Speaker 2</label>
+                        <input type="text" class="form-control" id="con_speaker2" name="con_speaker2" value="{{ form.con_speaker2.value }}">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            1st Constructive
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control w-100" id="constructive1" name="constructive1" style="height: 100%;">{{ form.constructive1.value }}</textarea>
+                        </div>
+                        <div class="card-footer">
+                            <i class="fas fa-microphone" onclick="startRecording('constructive1')"></i>
+                            <i class="fas fa-stop" onclick="stopRecording('constructive1')"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            2nd Constructive
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control w-100" id="constructive2" name="constructive2" style="height: 100%;">{{ form.constructive2.value }}</textarea>
+                        </div>
+                        <div class="card-footer">
+                            <i class="fas fa-microphone" onclick="startRecording('constructive2')"></i>
+                            <i class="fas fa-stop" onclick="stopRecording('constructive2')"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-header">
+                    1st Crossfire
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control w-100" id="crossfire1" name="crossfire1" style="height: 100%;">{{ form.crossfire1.value }}</textarea>
+                </div>
+                <div class="card-footer">
+                    <i class="fas fa-microphone" onclick="startRecording('crossfire1')"></i>
+                    <i class="fas fa-stop" onclick="stopRecording('crossfire1')"></i>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            1st Rebuttal
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control w-100" id="rebuttal1" name="rebuttal1" style="height: 100%;">{{ form.rebuttal1.value }}</textarea>
+                        </div>
+                        <div class="card-footer">
+                            <i class="fas fa-microphone" onclick="startRecording('rebuttal1')"></i>
+                            <i class="fas fa-stop" onclick="stopRecording('rebuttal1')"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            2nd Rebuttal
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control w-100" id="rebuttal2" name="rebuttal2" style="height: 100%;">{{ form.rebuttal2.value }}</textarea>
+                        </div>
+                        <div class="card-footer">
+                            <i class="fas fa-microphone" onclick="startRecording('rebuttal2')"></i>
+                            <i class="fas fa-stop" onclick="stopRecording('rebuttal2')"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-header">
+                    2nd Crossfire
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control w-100" id="crossfire2" name="crossfire2" style="height: 100%;">{{ form.crossfire2.value }}</textarea>
+                </div>
+                <div class="card-footer">
+                    <i class="fas fa-microphone" onclick="startRecording('crossfire2')"></i>
+                    <i class="fas fa-stop" onclick="stopRecording('crossfire2')"></i>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            1st Summary
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control w-100" id="summary1" name="summary1" style="height: 100%;">{{ form.summary1.value }}</textarea>
+                        </div>
+                        <div class="card-footer">
+                            <i class="fas fa-microphone" onclick="startRecording('summary1')"></i>
+                            <i class="fas fa-stop" onclick="stopRecording('summary1')"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            2nd Summary
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control w-100" id="summary2" name="summary2" style="height: 100%;">{{ form.summary2.value }}</textarea>
+                        </div>
+                        <div class="card-footer">
+                            <i class="fas fa-microphone" onclick="startRecording('summary2')"></i>
+                            <i class="fas fa-stop" onclick="stopRecording('summary2')"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-header">
+                    Grand Crossfire
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control w-100" id="grand_crossfire" name="grand_crossfire" style="height: 100%;">{{ form.grand_crossfire.value }}</textarea>
+                </div>
+                <div class="card-footer">
+                    <i class="fas fa-microphone" onclick="startRecording('grand_crossfire')"></i>
+                    <i class="fas fa-stop" onclick="stopRecording('grand_crossfire')"></i>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            1st Final Focus
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control w-100" id="final_focus1" name="final_focus1" style="height: 100%;">{{ form.final_focus1.value }}</textarea>
+                        </div>
+                        <div class="card-footer">
+                            <i class="fas fa-microphone" onclick="startRecording('final_focus1')"></i>
+                            <i class="fas fa-stop" onclick="stopRecording('final_focus1')"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            2nd Final Focus
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control w-100" id="final_focus2" name="final_focus2" style="height: 100%;">{{ form.final_focus2.value }}</textarea>
+                        </div>
+                        <div class="card-footer">
+                            <i class="fas fa-microphone" onclick="startRecording('final_focus2')"></i>
+                            <i class="fas fa-stop" onclick="stopRecording('final_focus2')"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group mt-3">
+                <label for="details">Details</label>
+                <textarea class="form-control" id="details" name="details">{{ form.details.value }}</textarea>
+            </div>
+            <div class="form-group mt-3">
+                <label for="response">Response</label>
+                <textarea class="form-control" id="response" name="response" readonly>{{ form.response.value }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-success btn-block mt-3">Save Changes</button>
+            <button type="button" class="btn btn-primary btn-block mt-3" onclick="generateResponse()">Generate Response</button>
+        </form>
+        <div class="text-center mt-4">
+            <a href="{% url 'member_overview' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast-save" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+            <div class="toast-header">
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Changes have been saved.
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        var mediaRecorder;
+        var recordedChunks = {};
+        
+        function startRecording(fieldId) {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                return;
+            }
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = function(event) {
+                        if (event.data.size > 0) {
+                            if (!recordedChunks[fieldId]) {
+                                recordedChunks[fieldId] = [];
+                            }
+                            recordedChunks[fieldId].push(event.data);
+                        }
+                    };
+                    mediaRecorder.start();
+                });
+        }
+
+        function stopRecording(fieldId) {
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                mediaRecorder.onstop = function() {
+                    var blob = new Blob(recordedChunks[fieldId], { type: 'audio/webm' });
+                    var formData = new FormData();
+                    formData.append('audio', blob);
+                    formData.append('field_id', fieldId);
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '{% url "transcribe_audio" %}',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        headers: { 'X-CSRFToken': csrftoken },
+                        success: function(response) {
+                            $('#' + fieldId).val(response.transcription);
+                        }
+                    });
+                };
+            }
+        }
+
+        function generateResponse() {
+            let data = {
+                'resolution': $('#resolution').val(),
+                'aff_speaker1': $('#aff_speaker1').val(),
+                'aff_speaker2': $('#aff_speaker2').val(),
+                'con_speaker1': $('#con_speaker1').val(),
+                'con_speaker2': $('#con_speaker2').val(),
+                'constructive1': $('#constructive1').val(),
+                'constructive2': $('#constructive2').val(),
+                'crossfire1': $('#crossfire1').val(),
+                'rebuttal1': $('#rebuttal1').val(),
+                'rebuttal2': $('#rebuttal2').val(),
+                'crossfire2': $('#crossfire2').val(),
+                'summary1': $('#summary1').val(),
+                'summary2': $('#summary2').val(),
+                'grand_crossfire': $('#grand_crossfire').val(),
+                'final_focus1': $('#final_focus1').val(),
+                'final_focus2': $('#final_focus2').val(),
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "generate_response" %}',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': csrftoken },
+                success: function(response) {
+                    $('#response').val(response.response);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

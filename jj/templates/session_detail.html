@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Detail</title>
+    {% load static %}
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">{{ session.name }}</h1>
+        <p><strong>Resolution:</strong> {{ session.resolution }}</p>
+        <p><strong>Details:</strong> {{ session.details }}</p>
+        <p><strong>Created at:</strong> {{ session.created_at }}</p>
+        <h3>Affirmative Speakers</h3>
+        <p><strong>Speaker 1:</strong> {{ session.aff_speaker1 }}</p>
+        <p><strong>Speaker 2:</strong> {{ session.aff_speaker2 }}</p>
+        <h3>Negative Speakers</h3>
+        <p><strong>Speaker 1:</strong> {{ session.con_speaker1 }}</p>
+        <p><strong>Speaker 2:</strong> {{ session.con_speaker2 }}</p>
+        <h3>Speeches</h3>
+        <p><strong>1st Constructive:</strong> {{ session.constructive1 }}</p>
+        <p><strong>2nd Constructive:</strong> {{ session.constructive2 }}</p>
+        <p><strong>1st Crossfire:</strong> {{ session.crossfire1 }}</p>
+        <p><strong>1st Rebuttal:</strong> {{ session.rebuttal1 }}</p>
+        <p><strong>2nd Rebuttal:</strong> {{ session.rebuttal2 }}</p>
+        <p><strong>2nd Crossfire:</strong> {{ session.crossfire2 }}</p>
+        <p><strong>1st Summary:</strong> {{ session.summary1 }}</p>
+        <p><strong>2nd Summary:</strong> {{ session.summary2 }}</p>
+        <p><strong>Grand Crossfire:</strong> {{ session.grand_crossfire }}</p>
+        <p><strong>1st Final Focus:</strong> {{ session.final_focus1 }}</p>
+        <p><strong>2nd Final Focus:</strong> {{ session.final_focus2 }}</p> 
+        <div class="text-center mt-4">
+            <a href="{% url 'edit_session' session.id %}" class="btn btn-primary">Edit Session</a>
+            <a href="{% url 'member_overview' %}" class="btn btn-secondary">Back to Overview</a>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
