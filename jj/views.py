@@ -1,5 +1,5 @@
 import os
-import whisper
+import requests
 import logging
 import subprocess
 import ssl
@@ -7,26 +7,27 @@ import openai
 import json
 import threading
 
-
 from django.conf import settings
 from django.core.files.storage import default_storage
-from django.http import JsonResponse
+from django.http import HttpResponseBadRequest, JsonResponse
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
 from .forms import SignUpForm
 from .models import Session
 from .forms import SessionForm
+from django.conf import settings
+from django.contrib import messages
 
-openai.api_key = 'ADD YOUR KEY'
+
+openai.api_key = settings.OPENAI_KEY
 
 # Set the full path to ffmpeg
 os.environ["PATH"] += os.pathsep + "/opt/homebrew/bin"
 
-# Load the Whisper model
-ssl._create_default_https_context = ssl._create_unverified_context
-model = whisper.load_model("base")
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -34,16 +35,53 @@ logger = logging.getLogger(__name__)
 def index(request):
     return render(request, 'index.html')
 
+def landing(request):
+    return render(request, 'landing.html')
+
+def transcribe(request):
+    return render(request, 'transcribe_audio.html')
+
+@login_required
+def profile(request):
+    sessions = Session.objects.filter(created_by=request.user).order_by('-created_at')
+    return render(request, 'member_profile.html', {'sessions': sessions})
+
 def signup_view(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('member_overview')
+            return redirect('profile')
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
+
+def signup_backup(request):
+    print(request.POST)
+    if request.method == 'POST':
+        # Get form data
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirmPassword')
+
+        # Check if passwords match
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return render(request, 'signup.html')
+
+        # Create a new user
+        try:
+            user = User.objects.create_user(username=name, email=email, password=password)
+            user.save()
+            messages.success(request, "Account created successfully!")
+            return redirect('login')  # Redirect to login page
+        except Exception as e:
+            messages.error(request, f"Error: {e}")
+            return render(request, 'signup.html')
+
+    return render(request, 'signup.html')  # Render the signup form
 
 
 def login_view(request):
@@ -53,7 +91,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('member_overview')
+            return redirect('profile')
         else:
             return render(request, 'login.html', {'error': 'Invalid credentials'})
     return render(request, 'login.html')
@@ -73,7 +111,77 @@ def session_detail(request, session_id):
     return render(request, 'session_detail.html', {'session': session})
 
 @login_required
+def create_session(request):
+    if request.method == 'POST':
+        name = request.GET.get('name')
+        resolution = request.GET.get('resolution')
+
+        session = Session(created_by=request.user, name=name, resolution=resolution)
+        session.save()
+
+        # Redirect to the session edit page or another appropriate page
+        return redirect('edit_session', session.id)
+
+    return render(request, 'create_session.html')
+
+@csrf_exempt
+def create_new_session(request):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            resolution = data.get('resolution')
+
+            if name and resolution:
+                # Create your session here
+                # Replace `Session.objects.create` with your actual model and logic
+                session = Session.objects.create(created_by=request.user, name=name, resolution=resolution)
+                return JsonResponse({
+                    'success': True,
+                    'name': session.name,
+                    'resolution': session.resolution,
+                    'created_at': session.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    'url': f'/session/edit/{session.id}/'
+                })
+            else:
+                return JsonResponse({'success': False, 'error': 'Missing name or resolution'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+@csrf_exempt
+def delete_session(request, session_id):
+    if request.method == 'DELETE':
+        session = get_object_or_404(Session, id=session_id, created_by=request.user)
+        session.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+@login_required
 def edit_session(request, session_id=None):
+
+    appId = settings.SYMBL_APPID
+    appSecret = settings.SYMBL_APPSECRET
+
+    url = "https://api.symbl.ai/oauth2/token:generate"
+
+    payload = {
+        "type": "application",
+        "appId": appId,
+        "appSecret": appSecret
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json"
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+
+    response_data = response.json()
+    access_token = response_data['accessToken']
+
     if session_id:
         session = get_object_or_404(Session, pk=session_id, created_by=request.user)
     else:
@@ -90,68 +198,16 @@ def edit_session(request, session_id=None):
             return redirect('edit_session', session_id=session.id)
     else:
         form = SessionForm(instance=session)
-    return render(request, 'edit_session.html', {'form': form, 'session': session})
+
+    context = {
+        'accessToken': access_token,
+        'form': form,
+        'session': session
+    }
+    return render(request, 'edit_session.html', context)
 
 @login_required
-def transcribe_audio(request):
-    if request.method == 'POST' and request.FILES['audio']:
-        try:
-            audio_file = request.FILES['audio']
-            file_name = default_storage.save(audio_file.name, audio_file)
-            file_path = default_storage.path(file_name)
-
-            print(file_name + "/" + file_path)
-
-            # Log the MIME type, file extension, and file size
-            mime_type = audio_file.content_type
-            file_extension = os.path.splitext(file_name)[1]
-            file_size = audio_file.size
-            logger.info(f"Received audio file with MIME type: {mime_type}, extension: {file_extension}, size: {file_size} bytes")
-
-            # Print the first few bytes of the file for debugging
-            with open(file_path, 'rb') as f:
-                file_head = f.read(100)
-                logger.info(f"File head: {file_head}")
-
-            # Log additional debug info
-            logger.debug(f"File path: {file_path}")
-            wav_file_path = file_path + '.wav'
-            command = f"ffmpeg -i {file_path} -ac 1 -ar 16000 -f wav {wav_file_path}"
-            logger.debug(f"Running command: {command}")
-
-            # Run ffmpeg command and log output
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            logger.debug(f"ffmpeg stdout: {result.stdout}")
-            logger.debug(f"ffmpeg stderr: {result.stderr}")
-
-            if result.returncode != 0:
-                raise subprocess.CalledProcessError(result.returncode, command)
-
-            # Check if the WAV file was created successfully
-            if not os.path.exists(wav_file_path):
-                raise FileNotFoundError(f"WAV file was not created: {wav_file_path}")
-
-            # Transcribe audio using Whisper
-            result = model.transcribe(wav_file_path)
-            transcription = result['text']
-
-            # Clean up the stored files
-            default_storage.delete(file_name)
-            if os.path.exists(wav_file_path):
-                os.remove(wav_file_path)
-
-            return JsonResponse({'transcription': transcription})
-        except subprocess.CalledProcessError as e:
-            logger.error(f"ffmpeg error: {e.stderr}")
-            return JsonResponse({'error': f"ffmpeg error: {e.stderr}"}, status=500)
-        except Exception as e:
-            logger.error(f"Error transcribing audio: {e}")
-            return JsonResponse({'error': str(e)}, status=500)
-
-    return JsonResponse({'error': 'Invalid request'}, status=400)
-
-@login_required
-def generate_response(request):
+def generate_response_detail(request):
     if request.method == 'POST':
         data = json.loads(request.body)
 
@@ -171,8 +227,6 @@ def generate_response(request):
         content += f"Grand Crossfire: {data['grand_crossfire']}\n"
         content += f"1st Final Focus: {data['final_focus1']}\n"
         content += f"2nd Final Focus: {data['final_focus2']}\n"
-
-        print(content)
 
         prompt = content
         response_list = []
@@ -196,10 +250,38 @@ def generate_response(request):
 
     return HttpResponseBadRequest("Invalid request method")
 
+@login_required
+def generate_response(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        content = f"Resolution: {data['resolution']}\n"
+        content += f"transcription : {data['transcription']}\n"
+
+        prompt = "Please judge the public forum round baed on the full round transcription with resolution" +content
+        response_list = []
+
+        # Create and start a thread
+        api_thread = threading.Thread(target=call_openai_api, args=(prompt, response_list))
+        api_thread.start()
+
+        # Wait for the thread to complete
+        api_thread.join()
+
+        # Get the result from the response list
+        if response_list:
+            result = response_list[0]
+        else:
+            result = "No response received."
+
+        response = result
+
+        return JsonResponse({'results': response})
+
+    return HttpResponseBadRequest("Invalid request method")
 
 # Function to call the OpenAI API
 def call_openai_api(prompt, response_list):
-    print('### Prompt : ' + prompt)
     try:
         response = openai.chat.completions.create(
             model="gpt-4o",
@@ -210,7 +292,6 @@ def call_openai_api(prompt, response_list):
             max_tokens=1500,
         )
         result = response.choices[0].message.content
-        print(result)
         response_list.append(result)
     except Exception as e:
         response_list.append(f"Error: {e}")

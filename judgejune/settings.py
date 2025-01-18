@@ -1,14 +1,20 @@
 import os
+import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'jj/static'),
-]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# Initialize environment variables
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# Determine if running on Google App Engine
+GAE_INSTANCE = os.getenv('GAE_INSTANCE')
+OPENAI_KEY = os.getenv('OPENAI_KEY')
+SYMBL_APPID = os.getenv('SYMBL_APPID')
+SYMBL_APPSECRET = os.getenv('SYMBL_APPSECRET')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -19,7 +25,7 @@ SECRET_KEY = 'django-insecure-7g7bcn20+s4kbkxv9n*e%&48t^o^hu$!=ijjf0n1efvm^(6e@2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['judgejune.wl.r.appspot.com','.appspot.com', 'judgeassist.com', 'www.judgeassist.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -42,7 +48,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
 ]
 
 ROOT_URLCONF = 'judgejune.urls'
@@ -69,12 +74,44 @@ WSGI_APPLICATION = 'judgejune.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
+
+if GAE_INSTANCE:
+   # Running on Google App Engine
+   DEBUG = True
+   DATABASES = {
+       'default': {
+           'ENGINE': 'django.db.backends.mysql',
+           'NAME': env('DB_NAME'),
+           'USER': env('DB_USER'),
+           'PASSWORD': env('DB_PASSWORD'),
+           'HOST': '/cloudsql/judgejune:us-west2:judgejune-db',
+           'PORT': '',
+       }
+   }
+else:
+   # Local development
+   DEBUG = True
+   DATABASES = {
+       'default': {
+           'ENGINE': 'django.db.backends.mysql',
+           'NAME': env('DB_NAME'),
+           'USER': env('DB_USER'),
+           'PASSWORD': env('DB_PASSWORD'),
+           'HOST': '',  # Leave empty for Unix socket
+           'PORT': '',  # Leave empty for Unix socket
+           'OPTIONS': {
+               'unix_socket': '/tmp/cloudsql/judgejune:us-west2:judgejune-db',
+           },
+       }
+   }
+
 
 
 # Password validation
@@ -111,10 +148,43 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+
+STATICFILES_DIRS = [
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',  # Change from DEBUG to WARNING
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}

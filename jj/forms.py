@@ -4,18 +4,41 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import Session
 
 class SignUpForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Email',
+            'id': 'email'
+        })
+    )
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Name',
+            'id': 'name'
+        })
+    )
+    password1 = forms.CharField(
+        label="Password",  # Change the label for password1
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Password',
+            'id': 'password'
+        })
+    )
+    password2 = forms.CharField(
+        label="Confirm Password",  # Change the label for password2
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm Password',
+            'id': 'confirmPassword'
+        })
+    )
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2')
-
-    def save(self, commit=True):
-        user = super(SignUpForm, self).save(commit=False)
-        user.email = self.cleaned_data['email']
-        if commit:
-            user.save()
-        return user
+        fields = ['username', 'email', 'password1', 'password2']
 
 class SessionForm(forms.ModelForm):
     class Meta:
@@ -28,7 +51,8 @@ class SessionForm(forms.ModelForm):
             'crossfire1', 'rebuttal1', 'rebuttal2', 'crossfire2',
             'summary1', 'summary2', 'grand_crossfire',
             'final_focus1', 'final_focus2',
-            'response'
+            'response',
+            'transcription','results'
         ]
     
     def __init__(self, *args, **kwargs):

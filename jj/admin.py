@@ -24,7 +24,16 @@ class SessionAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at',)
     fieldsets = (
         (None, {
-            'fields': ('name', 'resolution', 'details')
+            'fields': ('name', 'resolution', 'details',
+                'aff_speaker1', 'aff_speaker2',
+                'con_speaker1', 'con_speaker2',
+                'constructive1', 'constructive2',
+                'crossfire1', 'rebuttal1', 'rebuttal2', 'crossfire2',
+                'summary1', 'summary2', 'grand_crossfire',
+                'final_focus1', 'final_focus2',
+                'response',
+                'transcription','results'
+            )
         }),
         ('Meta Data', {
             'fields': ('created_by', 'created_at')

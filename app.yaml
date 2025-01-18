@@ -1,0 +1,15 @@
+runtime: python312  # or any other version you are using
+
+entrypoint: gunicorn -b :$PORT judgejune.wsgi:application --workers=1 --log-level debug
+
+instance_class: F4_1G  # Upgrade to an instance with more memory (2GB)
+
+handlers:
+- url: /static
+  static_dir: static/
+- url: /.*
+  script: auto
+  secure: always
+
+env_variables:
+  APPENGINE_URL: https://judgejune.wl.r.appspot.com

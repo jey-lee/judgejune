@@ -27,5 +27,8 @@ class Session(models.Model):
     
     response = models.TextField(blank=True, default='')
     
+    transcription = models.TextField(blank=True, default='')
+    results = models.TextField(blank=True, default='')
+    
     def __str__(self):
         return self.name
