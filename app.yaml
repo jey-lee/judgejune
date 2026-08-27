@@ -13,6 +13,3 @@ handlers:
 
 env_variables:
   APPENGINE_URL: https://judgejune.wl.r.appspot.com
-
-readiness_check:
-  app_start_timeout_sec: 1800

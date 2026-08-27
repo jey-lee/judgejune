@@ -295,28 +295,28 @@ def generate_prompt(event_type):
 
      return prompt
 
-# Function to call the OpenAI API using GPT-5.6 for final ballot evaluation
+# Function to call the OpenAI API for fast, high-quality ballot evaluation
 def call_openai_api(prompt, response_list):
     try:
         try:
-            logger.info("Generating ballot decision using GPT-5.6...")
+            logger.info("Generating ballot decision using GPT-4o for fast response...")
             response = openai.chat.completions.create(
-                model="gpt-5.6",
-                messages=[
-                    {"role": "developer", "content": "You are an expert, unbiased debate judge evaluating round ballots with high reasoning depth."},
-                    {"role": "user", "content": prompt},
-                ],
-                max_completion_tokens=5000,
-            )
-        except Exception as primary_err:
-            logger.warning(f"Primary GPT-5.6 model call failed ({primary_err}). Falling back to o3-mini/gpt-4o.")
-            response = openai.chat.completions.create(
-                model="o3-mini",
+                model="gpt-4o",
                 messages=[
                     {"role": "developer", "content": "You are an expert, unbiased debate judge evaluating round ballots."},
                     {"role": "user", "content": prompt},
                 ],
-                max_completion_tokens=5000,
+                max_completion_tokens=2000,
+            )
+        except Exception as primary_err:
+            logger.warning(f"Primary model call failed ({primary_err}). Falling back to gpt-4o-mini.")
+            response = openai.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "developer", "content": "You are an expert, unbiased debate judge evaluating round ballots."},
+                    {"role": "user", "content": prompt},
+                ],
+                max_completion_tokens=2000,
             )
         result = response.choices[0].message.content
         response_list.append(result)
