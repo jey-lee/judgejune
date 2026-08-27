@@ -21,6 +21,8 @@ from .models import Session
 from .forms import SessionForm
 from django.conf import settings
 from django.contrib import messages
+from django.views.decorators.http import require_GET
+from openai import OpenAI
 
 
 openai.api_key = settings.OPENAI_KEY
@@ -43,8 +45,11 @@ def transcribe(request):
 
 @login_required
 def profile(request):
+    user = request.user
     sessions = Session.objects.filter(created_by=request.user).order_by('-created_at')
-    return render(request, 'member_profile.html', {'sessions': sessions})
+    return render(request, 'member_profile.html', {
+        'user': user,
+        'sessions': sessions})
 
 def signup_view(request):
     if request.method == 'POST':
@@ -113,10 +118,11 @@ def session_detail(request, session_id):
 @login_required
 def create_session(request):
     if request.method == 'POST':
+        event_type = request.GET.get('event_type')
         name = request.GET.get('name')
         resolution = request.GET.get('resolution')
 
-        session = Session(created_by=request.user, name=name, resolution=resolution)
+        session = Session(created_by=request.user, name=name, resolution=resolution, event_type=event_type)
         session.save()
 
         # Redirect to the session edit page or another appropriate page
@@ -128,16 +134,20 @@ def create_session(request):
 def create_new_session(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
+
             data = json.loads(request.body)
+            
+            event_type = data.get('event_type')
             name = data.get('name')
             resolution = data.get('resolution')
 
-            if name and resolution:
+            if name and resolution and event_type:
                 # Create your session here
                 # Replace `Session.objects.create` with your actual model and logic
-                session = Session.objects.create(created_by=request.user, name=name, resolution=resolution)
+                session = Session.objects.create(created_by=request.user, name=name, resolution=resolution, event_type=event_type)
                 return JsonResponse({
                     'success': True,
+                    'event_type': session.event_type,
                     'name': session.name,
                     'resolution': session.resolution,
                     'created_at': session.created_at.strftime('%Y-%m-%d %H:%M:%S'),
@@ -162,26 +172,6 @@ def delete_session(request, session_id):
 @login_required
 def edit_session(request, session_id=None):
 
-    appId = settings.SYMBL_APPID
-    appSecret = settings.SYMBL_APPSECRET
-
-    url = "https://api.symbl.ai/oauth2/token:generate"
-
-    payload = {
-        "type": "application",
-        "appId": appId,
-        "appSecret": appSecret
-    }
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json"
-    }
-
-    response = requests.post(url, json=payload, headers=headers)
-
-    response_data = response.json()
-    access_token = response_data['accessToken']
-
     if session_id:
         session = get_object_or_404(Session, pk=session_id, created_by=request.user)
     else:
@@ -200,7 +190,6 @@ def edit_session(request, session_id=None):
         form = SessionForm(instance=session)
 
     context = {
-        'accessToken': access_token,
         'form': form,
         'session': session
     }
@@ -255,10 +244,13 @@ def generate_response(request):
     if request.method == 'POST':
         data = json.loads(request.body)
 
-        content = f"Resolution: {data['resolution']}\n"
-        content += f"transcription : {data['transcription']}\n"
+        content = f"Resolution is : {data['resolution']}\n"
+        content += f"Transcription is : {data['transcription']}\n"
 
-        prompt = "Please judge the public forum round baed on the full round transcription with resolution" +content
+        event_type = data['event_type']
+
+        prompt = generate_prompt(event_type) + content
+
         response_list = []
 
         # Create and start a thread
@@ -280,18 +272,157 @@ def generate_response(request):
 
     return HttpResponseBadRequest("Invalid request method")
 
-# Function to call the OpenAI API
+def generate_prompt(event_type):
+     prompt = "Given the following transcript of a Public Forum Debate round, evaluate the argument based on the following criteria:\n"
+
+     if event_type == 'Public Forum':
+         prompt += "1. Argumentation is focused on the resolution, where the Affirmative side is in support of said resolution and the Negative side is in opposition\n"
+         prompt += "2. Each speech presents independent argumentation for each side, refutations against the opposing side, defenses against such refutations, and comparisons between the implications of each argument\n"
+         prompt += "3. The round is structured by two constructives, two rebuttals, two summaries, and two final foci; disregard any new evidence or arguments presented in the last 4 speeches: these speeches should be cross applications or clarifications of arguments already made in the round\n"
+         prompt += "4. Upon completion, provide feedback for each speech, give a final decision on the side that won the debate, and explain your rationale for the decision\n"
+         prompt += "5. There should be specific arguments that you felt compelled to vote on for a side to win the round, no decision should be made for general strategy or eloquence\n"
+     elif event_type == 'Parliamentary Debate':
+         prompt += "1. The round is structured by four constructives and two rebuttals: constructives are speeches in which debates occur with new information and responses and rebuttals are speeches in which the main issues of the debate are weighed to show who wins. New information is not allowed in rebuttal speeches.\n"
+         prompt += "2. The format of the round is first affirmative construction (7 minutes), first negative constructive (8 minutes), second affirmative constructive (8 minutes), second negative constructive (8 minutes), negative rebuttal (4 minutes), affirmative rebuttal (5 minutes).\n"
+         prompt += "3. POIs, which are questions that examine the cases of the speaking side can be asked during constructive speeches. These interrupt the time and continue within the time. They are not allowed in the rebuttal speeches.\n"
+         prompt += "4. POOs, which pause time are used to point out new information being brought up in the rebuttal speeches, which violates the rules. It is up to you, the judge, to determine whether this information was previously mentioned or is new.\n"
+         prompt += "5. The criterion on which the round should be weighed will be provided by the debaters, whether it be a fact, policy, or value round (the definition of these rounds will also be provided). Please go with the framework that the debaters agree on, and if the weighing mechanism is contested, choose what seems most logical to you based on their arguments.\n"
+         prompt += "6. Although some evidence can be cited, unless contested, all points provided by debaters should be accepted as fact. However, detailed statistics and numbers should enhance the validity of points proposed by either side.\n"
+         prompt += "7. In Parli, the debaters must point out anything for it to be valid, so only take rebuttals and dropped points if the debaters point them out.\n"
+         prompt += "8. At the end of the round, please look over everything that has been said and make a decision. Give feedback on missed points of the debate, good areas, and analyze each speech so that speakers can see what they did good and what they can do better.\n"
+    
+     prompt += "The results should have three main sections. 1.Summary of the round. 2.Decision and reason for decision and 3.Feedback to each team"
+
+     return prompt
+
+# Function to call the OpenAI API using GPT-5.6 for final ballot evaluation
 def call_openai_api(prompt, response_list):
     try:
-        response = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a public forum debate judge."},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=1500,
-        )
+        try:
+            logger.info("Generating ballot decision using GPT-5.6...")
+            response = openai.chat.completions.create(
+                model="gpt-5.6",
+                messages=[
+                    {"role": "developer", "content": "You are an expert, unbiased debate judge evaluating round ballots with high reasoning depth."},
+                    {"role": "user", "content": prompt},
+                ],
+                max_completion_tokens=5000,
+            )
+        except Exception as primary_err:
+            logger.warning(f"Primary GPT-5.6 model call failed ({primary_err}). Falling back to o3-mini/gpt-4o.")
+            response = openai.chat.completions.create(
+                model="o3-mini",
+                messages=[
+                    {"role": "developer", "content": "You are an expert, unbiased debate judge evaluating round ballots."},
+                    {"role": "user", "content": prompt},
+                ],
+                max_completion_tokens=5000,
+            )
         result = response.choices[0].message.content
         response_list.append(result)
     except Exception as e:
+        logger.error(f"Error generating ballot: {e}")
         response_list.append(f"Error: {e}")
+
+@csrf_exempt
+def sessiontoken_view(request):
+    if request.method != "GET":
+        return HttpResponseBadRequest("Invalid request method.")
+
+    # Retrieve your OpenAI API key from the environment
+    openai_api_key = openai.api_key
+    print(openai_api_key)
+
+    if not openai_api_key:
+        logger.error("OpenAI API key not configured.")
+        return JsonResponse({"error": "OpenAI API key not configured."}, status=500)
+
+    url = "https://api.openai.com/v1/realtime/transcription_sessions"
+    headers = {
+        "Authorization": f"Bearer {openai_api_key}",
+        "Content-Type": "application/json",
+        "OpenAI-Beta": "realtime=v1",
+    }
+    payload = {
+        "input_audio_transcription": {
+            "model": "gpt-4o-transcribe",
+            "prompt": "",
+            "language": "en"
+        },
+        "turn_detection": {
+            "type": "server_vad",
+            "threshold": 0.5,
+            "prefix_padding_ms": 300,
+            "silence_duration_ms": 500
+        },
+        "input_audio_noise_reduction": {
+            "type": "near_field"
+        },
+        "include": ["item.input_audio_transcription.logprobs"],
+        "input_audio_format": "pcm16"
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        if response.status_code != 200:
+            logger.error("OpenAI API error: %s", response.text)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        error_details = response.text if response is not None else str(e)
+        logger.exception("Failed to create transcription session:")
+        return JsonResponse({"error": "Failed to create transcription session", "details": error_details}, status=500)
+
+    return JsonResponse(response.json())
+
+
+@require_GET
+def realtime_token(request):
+    cartesia_key = getattr(settings, 'CARTESIA_API_KEY', None) or os.getenv('CARTESIA_API_KEY')
+    if not cartesia_key:
+        import environ
+        env = environ.Env()
+        env.read_env(os.path.join(settings.BASE_DIR, '.env'))
+        cartesia_key = env('CARTESIA_API_KEY', default=None)
+
+    if not cartesia_key:
+        return JsonResponse({"error": "Cartesia API key not configured. Please set CARTESIA_API_KEY in .env"}, status=500)
+
+    url = "https://api.cartesia.ai/access-token"
+    headers = {
+        "Cartesia-Version": "2026-08-14",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {cartesia_key}"
+    }
+    payload = {
+        "grants": {
+            "stt": True
+        },
+        "expires_in": 3600
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        data = response.json()
+        return JsonResponse(data)
+    except requests.RequestException as e:
+        error_details = response.text if response is not None and hasattr(response, 'text') else str(e)
+        logger.error(f"Error fetching Cartesia access token: {error_details}")
+        return JsonResponse({"error": error_details}, status=500)
+
+
+
+def transcription_page(request):
+    return render(request, 'oatranscribe.html')
+
+def privacy_view(request):
+    return render(request, 'privacy.html')
+
+def terms_view(request):
+    return render(request, 'terms.html')
+
+def feedback_view(request):
+    return render(request, 'feedback.html')
+
+def support_view(request):
+    return render(request, 'support.html')

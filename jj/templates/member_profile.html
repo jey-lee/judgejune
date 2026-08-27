@@ -12,129 +12,120 @@
 
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{% static 'assets/css/theme.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <title>Coming soon | Geeks - Bootstrap 5 Template</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=999">
+    <title>Coming soon | JudgeAssist</title>
+
+    <script>
+        (function (h, o, t, j, a, r) {
+            h.hj = h.hj || function () { (h.hj.q = h.hj.q || []).push(arguments) };
+            h._hjSettings = { hjid: 5313711, hjsv: 6 };
+            a = o.getElementsByTagName('head')[0];
+            r = o.createElement('script'); r.async = 1;
+            r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
+            a.appendChild(r);
+        })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
+    </script>
 </head>
 
-<body class="bg-white">
-
-    <!--PROFILE START-->
-    <div class="card">
-        <!--img-->
-        <div class="rounded-top-3"
-            style="background-image: url(../static/assets/images/mentor/mentor-single.png); background-position: center; background-size: cover; background-repeat: no-repeat; height: 228px">
+<body>
+    <nav class="navbar navbar-expand-lg py-3">
+        <div class="container px-4 d-flex justify-content-between align-items-center">
+            <a class="navbar-brand text-primary fw-bold fs-3 text-decoration-none" href="{% url 'landing' %}" style="letter-spacing: -0.03em; font-family: var(--font-mono);">
+                Judge<span class="text-dark">Assist</span>
+            </a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm">Log out</a>
+            </div>
         </div>
-        <div class="card-body p-md-5">
-            <div class="d-flex flex-column gap-5">
-                <!--img-->
-                <div class="mt-n8">
-                    <img src="{% static 'assets/images/mentor/mentor-img-single.jpg' %}" alt="mentor 1"
-                        class="img-fluid rounded-4 mt-n8">
-                </div>
-                <div class="d-flex flex-column gap-5">
-                    <div class="d-flex flex-column gap-3">
-                        <div class="d-flex flex-md-row flex-column justify-content-between gap-2">
-                            <!--heading-->
-                            <div>
-                                <h1 class="mb-0">Welcome, {{ user.first_name }}</h1>
-                            </div>
-                            <!--button-->
-                            <div class="d-flex flex-row gap-3 align-items-center">
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                    data-bs-target="#eventModal">
-                                    Create New Round
-                                </button>
+    </nav>
+
+    <div class="container mt-4">
+        <!--PROFILE START-->
+        <div class="row">
+            <div class="col-12 p-2">
+                <div class="card">
+                    <div class="card-body p-md-5">
+                        <div class="d-flex flex-column gap-5">
+                            <div class="d-flex flex-column gap-3">
+                                <div class="d-flex flex-md-row flex-column justify-content-between gap-2">
+                                    <!--heading-->
+                                    <div>
+                                        <h1 class="mb-0">Welcome, {{ user.first_name }}</h1>
+                                    </div>
+                                    <!--button-->
+                                    <div class="d-flex flex-row gap-3 align-items-center">
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                            data-bs-target="#eventModal">
+                                            Create New Round
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!--PROFILE END-->
+        <!--PROFILE END-->
 
-    <!--EVENTS START-->
-    <div class="py-lg-14 bg-light pt-3 pb-3">
-        <!-- container -->
-
-        <div class="container">
-            <div class="row">
-                <!-- col -->
-
-                <div class="col-md-12 col-12">
-
-                    <div class="row text-center">
-                        <div class="col-md-12 px-lg-1 mb-3 mt-3">
-                            <span class="text-uppercase text-primary fw-semibold ls-md">All Events
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <!-- col -->
-
-                    {% for session in sessions %}
-                    <div class="col-md-6 col-6 p-2">
-                        <!-- Card body -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title"><a href="{% url 'edit_session' session.id %}">
-                                        {{ session.name }}</a></h5>
-                            </div>
-                            <div class="card-body">
-                                <p><strong>Resolution:</strong> {{ session.resolution }}</p>
-                                <p><strong>Created at:</strong> {{ session.created_at }}</p>
-                                <a href="{% url 'edit_session' session.id %}" class="btn btn-outline-primary">
-                                    Go to Round</a>
-                                <button
-                                    class="btn btn-outline-danger btn-sm delete-round-btn position-absolute bottom-0 end-0 mb-4 mx-4"
-                                    data-session-id="{{ session.id }}" data-bs-toggle="modal"
-                                    data-bs-target="#deleteConfirmationModal">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" fill="currentColor"
-                                        class="bi bi-trash" viewBox="0 0 16 16">
-                                        <path
-                                            d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
-                                        <path
-                                            d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-
-
-
-                </div>
-
-
-                <!--Card-->
+        <!--EVENTS START-->
+        <div class="row mt-5 mb-3">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                <span class="text-uppercase text-primary fw-semibold ls-md">All Events</span>
+                <span id="rounds-counter-badge" class="badge bg-primary rounded-pill">{{ sessions|length }} Rounds</span>
             </div>
-
         </div>
+
+        <div class="row mb-5" id="events-grid">
+            <!-- col -->
+            {% for session in sessions %}
+            <div class="col-md-6 col-12 p-2">
+                <!-- Card body -->
+                <div class="card h-100 position-relative">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><a href="{% url 'edit_session' session.id %}">
+                                {{ session.name }}</a></h5>
+                    </div>
+                    <div class="card-body pb-5">
+                        <p class="mb-2"><strong>Event Type:</strong> {{ session.event_type }}</p>
+                        <p class="mb-2"><strong>Resolution:</strong> {{ session.resolution }}</p>
+                        <p class="mb-4"><strong>Created at:</strong> {{ session.created_at }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <a href="{% url 'edit_session' session.id %}" class="btn btn-outline-primary">
+                                Go to Round</a>
+                            <button
+                                class="btn btn-outline-accent btn-sm delete-round-btn"
+                                data-session-id="{{ session.id }}" data-bs-toggle="modal"
+                                data-bs-target="#deleteConfirmationModal">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                                    class="bi bi-trash" viewBox="0 0 16 16">
+                                    <path
+                                        d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                    <path
+                                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <!--EVENTS END-->
     </div>
     <!--EVENTS END-->
 
 
     <!--FOOTER START-->
-    <footer class="footer">
-        <div class="container">
-            <div class="row align-items-center g-0 border-top py-2">
-                <!-- Desc -->
-                <div class="col-md-6 col-12 text-center text-md-start">
-                    <span>© <span id="copyright">
-                            <script>document.getElementById('copyright').appendChild(document.createTextNode(new Date().getFullYear()))</script>
-                        </span>Judge June. All Rights Reserved.</span>
-                </div>
-                <!-- Links -->
-                <div class="col-12 col-md-6">
-                    <nav class="nav nav-footer justify-content-center justify-content-md-end">
-                        <a class="nav-link active ps-0" href="#">Privacy</a>
-                        <a class="nav-link" href="#">Terms </a>
-                        <a class="nav-link" href="#">Feedback</a>
-                        <a class="nav-link" href="#">Support</a>
-                    </nav>
+    <footer class="footer mt-auto py-4">
+        <div class="container px-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 border-top pt-4">
+                <span class="text-muted small">© <span id="copyright"><script>document.getElementById('copyright').appendChild(document.createTextNode(new Date().getFullYear()))</script></span> Judge Assist. All Rights Reserved.</span>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'privacy' %}" class="text-secondary text-decoration-none small">Privacy</a>
+                    <a href="{% url 'terms' %}" class="text-secondary text-decoration-none small">Terms</a>
+                    <a href="{% url 'feedback' %}" class="text-secondary text-decoration-none small">Feedback</a>
+                    <a href="{% url 'support' %}" class="text-secondary text-decoration-none small">Support</a>
                 </div>
             </div>
         </div>
@@ -146,30 +137,29 @@
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
-                <div class="modal-header bg-light">
+                <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalCenterTitle">Create New Round</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                     </button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group p-2">
-                        <label class="p-2" for="name">Event Name :</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{ form.name.value }}">
+                        <label for="event_type">Event Type :</label>
+                        <select class="form-control" id="event_type" name="event_type">
+                            <option value="Public Forum">Public Forum</option>
+                            <option value="Parliamentary Debate">Parliamentary Debate</option>
+                        </select>
                     </div>
                     <div class="form-group p-2">
-                        <label class="p-2" for="resolution">Resolution :</label>
-                        <input type="text" class="form-control" id="resolution" name="resolution"
-                            value="{{ form.name.resolution }}">
+                        <label for="name">Event Name :</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Finals Round 1">
+                    </div>
+                    <div class="form-group p-2">
+                        <label for="resolution">Resolution :</label>
+                        <input type="text" class="form-control" id="resolution" name="resolution" placeholder="e.g. Resolved: ...">
                     </div>
                 </div>
-                <!--
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <a href="{% url 'edit_session' %}" id="createRoundButton" class="btn btn-primary">Create Round</a>
-                </div>
-                -->
-
-                <div class="modal-footer bg-light">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" id="saveRoundButton" class="btn btn-primary">Save Round</button>
                 </div>
@@ -178,19 +168,20 @@
     </div>
     <!--MODAL END-->
 
+
     <!-- Confirmation Modal START -->
     <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
-                <div class="modal-header bg-light">
+                <div class="modal-header">
                     <h5 class="modal-title" id="confirmationModalLabel">Success</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <p id="confirmationMessage">Your round has been successfully created!</p>
                 </div>
-                <div class="modal-footer bg-light">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
                 </div>
             </div>
@@ -198,7 +189,7 @@
     </div>
     <!-- Confirmation Modal END -->
 
-    <!-- DELET CONFIRMATION MODAL START-->
+    <!-- DELETE CONFIRMATION MODAL START-->
     <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -220,34 +211,23 @@
     <!-- DELETE CONFIRMATION MODAL END-->
 
     <script>
-        document.getElementById('createRoundButton').addEventListener('click', function (event) {
-            const name = document.getElementById('name').value;
-            const resolution = document.getElementById('resolution').value;
+        function updateRoundsCount(delta) {
+            const badge = document.getElementById('rounds-counter-badge');
+            if (!badge) return;
+            const currentText = badge.textContent || '';
+            const match = currentText.match(/(\d+)/);
+            let count = match ? parseInt(match[1], 10) : 0;
+            count = Math.max(0, count + delta);
+            badge.textContent = `${count} ${count === 1 ? 'Round' : 'Rounds'}`;
+        }
 
-            // Prevent navigating if inputs are empty
-            if (!name || !resolution) {
-                event.preventDefault();
-                alert('Please fill in both the name and resolution fields.');
-                return;
-            }
-
-            // Update the href with query parameters
-            const url = new URL("{% url 'create_session' %}", window.location.origin);
-            url.searchParams.append('name', name);
-            url.searchParams.append('resolution', resolution);
-
-            // Set the updated URL
-            this.setAttribute('href', url.toString());
-        });
-    </script>
-
-    <script>
         document.getElementById('saveRoundButton').addEventListener('click', function () {
             const name = document.getElementById('name').value;
             const resolution = document.getElementById('resolution').value;
+            const eventType = document.getElementById('event_type').value;
 
-            if (!name || !resolution) {
-                alert('Please fill in both the name and resolution fields.');
+            if (!name || !resolution || !eventType) {
+                alert('Please fill in all fields (Event Name, Resolution, and Event Type).');
                 return;
             }
 
@@ -256,38 +236,56 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': '{{ csrf_token }}', // Add the CSRF token
+                    'X-CSRFToken': '{{ csrf_token }}',
                 },
-                body: JSON.stringify({ name, resolution })
+                body: JSON.stringify({ name, resolution, event_type: eventType })
             })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Close the modal
-                        document.querySelector('.btn-close').click();
+                        // Close the create modal
+                        const modalEl = document.getElementById('eventModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) modalInstance.hide();
 
-                        const confirmationMessage = `Round "${data.name}" created successfully!`;
-                        showConfirmationDialog(confirmationMessage);
+                        // Reset input values
+                        document.getElementById('name').value = '';
+                        document.getElementById('resolution').value = '';
 
-                        // Dynamically add the new round to the events list
-                        const titleElement = document.querySelector('.text-uppercase.text-primary'); // Adjust the selector to match your "All Events" title
-                        const newCard = `
-                        <div class="row">
-                            <div class="col-md-6 col-6 p-2">
-                                <div class="card">
+                        showConfirmationDialog(`Round "${data.name}" created successfully!`);
+                        updateRoundsCount(1);
+
+                        // Dynamically prepend new card into #events-grid with exact matching alignment & styling
+                        const eventsGrid = document.getElementById('events-grid');
+                        if (eventsGrid) {
+                            const newCardHtml = `
+                            <div class="col-md-6 col-12 p-2">
+                                <div class="card h-100 position-relative">
                                     <div class="card-header">
-                                        <h5 class="card-title"><a href="${data.url}">${data.name}</a></h5>
+                                        <h5 class="card-title mb-0"><a href="${data.url}">${data.name}</a></h5>
                                     </div>
-                                    <div class="card-body">
-                                        <p><strong>Resolution:</strong> ${data.resolution}</p>
-                                        <p><strong>Created at:</strong> ${data.created_at}</p>
-                                        <a href="${data.url}" class="btn btn-outline-primary">Go to Round</a>
+                                    <div class="card-body pb-5">
+                                        <p class="mb-2"><strong>Event Type:</strong> ${data.event_type}</p>
+                                        <p class="mb-2"><strong>Resolution:</strong> ${data.resolution}</p>
+                                        <p class="mb-4"><strong>Created at:</strong> ${data.created_at}</p>
+                                        <div class="d-flex justify-content-between align-items-center mt-3">
+                                            <a href="${data.url}" class="btn btn-outline-primary">Go to Round</a>
+                                            <button
+                                                class="btn btn-outline-accent btn-sm delete-round-btn"
+                                                data-session-id="${data.id || ''}" data-bs-toggle="modal"
+                                                data-bs-target="#deleteConfirmationModal">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                                                    class="bi bi-trash" viewBox="0 0 16 16">
+                                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>`;
-                        //document.querySelector('.row').insertAdjacentHTML('afterbegin', newCard);
-                        titleElement.parentElement.insertAdjacentHTML('afterend', newCard); // Add after the title
+                            </div>`;
+                            eventsGrid.insertAdjacentHTML('afterbegin', newCardHtml);
+                        }
                     } else {
                         alert('Failed to create round. Please try again.');
                     }
@@ -296,23 +294,22 @@
         });
 
         function showConfirmationDialog(message) {
-            // Update the message inside the modal
             const confirmationMessageElement = document.getElementById('confirmationMessage');
             confirmationMessageElement.textContent = message;
-
-            // Show the modal
             const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
             confirmationModal.show();
         }
     </script>
 
     <script>
-        let sessionToDelete = null; // Store session ID to delete
+        let sessionToDelete = null;
 
-        document.querySelectorAll('.delete-round-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                sessionToDelete = this.getAttribute('data-session-id'); // Get the session ID
-            });
+        // Event delegation for delete buttons (works for both initial & dynamically created cards)
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.delete-round-btn');
+            if (btn) {
+                sessionToDelete = btn.getAttribute('data-session-id');
+            }
         });
 
         document.getElementById('confirmDeleteButton').addEventListener('click', function () {
@@ -328,13 +325,17 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Remove the card from the DOM
-                        const cardToRemove = document.querySelector(`[data-session-id="${sessionToDelete}"]`).closest('.col-md-6');
-                        cardToRemove.remove();
+                        const btnToRemove = document.querySelector(`[data-session-id="${sessionToDelete}"]`);
+                        if (btnToRemove) {
+                            const cardToRemove = btnToRemove.closest('.col-md-6');
+                            if (cardToRemove) cardToRemove.remove();
+                        }
 
-                        // Hide the modal
-                        const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmationModal'));
-                        deleteModal.hide();
+                        updateRoundsCount(-1);
+
+                        const deleteModalEl = document.getElementById('deleteConfirmationModal');
+                        const deleteModal = bootstrap.Modal.getInstance(deleteModalEl);
+                        if (deleteModal) deleteModal.hide();
                     } else {
                         alert('Error: Unable to delete the round.');
                     }
@@ -345,6 +346,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-</body>
+</body>>
 
 </html>

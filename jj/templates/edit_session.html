@@ -3,7 +3,7 @@
 
 <head>
     <!-- Required meta tags -->
-    <title>Index Page</title>
+    <title>JudgeAssist</title>
     {% load static %}
 
     <meta charset="utf-8" />
@@ -17,186 +17,465 @@
 
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{% static 'assets/css/theme.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=999">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
-    <title>Coming soon | Geeks - Bootstrap 5 Template</title>
+    <style>
+        /* Subtle Slow Blinking Apple Liquid Glow for Text Area & Record Button */
+        textarea#transcription.recording-active,
+        textarea#transcription.recording-active:focus,
+        textarea#transcription.recording-active:hover {
+            border: 1.5px solid #FF2D55 !important;
+            outline: none !important;
+            animation: subtleSlowBlink 2.6s infinite alternate ease-in-out !important;
+        }
+
+        button#mic-record-btn.recording-active {
+            background: linear-gradient(135deg, #FF2D55 0%, #FF3B30 100%) !important;
+            border-color: rgba(255, 255, 255, 0.8) !important;
+            color: #ffffff !important;
+            animation: subtleSlowPulse 2.6s infinite alternate ease-in-out !important;
+        }
+
+        @keyframes subtleSlowPulse {
+            0% {
+                opacity: 0.4;
+                box-shadow: 0 0 2px rgba(255, 45, 85, 0.1);
+                transform: scale(0.99);
+            }
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 20px rgba(255, 45, 85, 0.6), 0 0 35px rgba(255, 45, 85, 0.35);
+                transform: scale(1.03);
+            }
+        }
+
+        @keyframes subtleSlowBlink {
+            0% {
+                border-color: rgba(255, 45, 85, 0.05) !important;
+                box-shadow: 0 0 0px transparent, inset 0 0 0px transparent !important;
+            }
+            100% {
+                border-color: #FF2D55 !important;
+                box-shadow: 0 0 16px rgba(255, 45, 85, 0.5), inset 0 0 8px rgba(255, 45, 85, 0.25) !important;
+            }
+        }
+    </style>
+
+    <title>JudgeAssist</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Libs JS -->
     <script src="{% static '/assets/libs/@popperjs/core/dist/umd/popper.min.js' %}"></script>
     <script src="{% static '/assets/libs/bootstrap/dist/js/bootstrap.min.js' %}"></script>
     <script src="{% static '/assets/libs/simplebar/dist/simplebar.min.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://sdk.symbl.ai/js/beta/symbl-web-sdk/latest/symbl.min.js"></script>
 
     <script>
-        const accessToken = '{{ accessToken }}';
-        var connection;
-        const start = async () => {
-            try {
-                document.getElementById("recording-dot").style.display = "inline-block"; // Show glowing dot
+        let cartesiaWs = null;
+        let audioContext = null;
+        let localStream = null;
+        let audioProcessor = null;
+        let finalizedText = "";
+        let currentTurnTranscript = "";
 
-                // Symbl recommends replacing the App ID and App Secret with an Access Token for authentication in production applications.
-                // For more information about authentication see https://docs.symbl.ai/docs/developer-tools/authentication/.
-                const symbl = new Symbl({
-                    accessToken: accessToken,
-                });
+        let lastSpeechTimestamp = Date.now();
+        let pauseNewlinesAdded = false;
+        let pauseMonitorInterval = null;
 
-                // Open a Streaming API WebSocket Connection and start processing audio from your input device.
-                connection = await symbl.createAndStartNewConnection();
+        let cursorVisible = true;
+        let cursorInterval = null;
+        let isRecordingActive = false;
 
-                // Retrieve real-time transcription from the conversation.
-                connection.on("message", (speechData) => {
-                    speechData.forEach((item) => {
-                        document.querySelector("#transcription").value += item.payload.content + " ";
-                    });
-                });
+        function startCursorBlink() {
+            isRecordingActive = true;
+            cursorVisible = true;
+            if (cursorInterval) clearInterval(cursorInterval);
+            cursorInterval = setInterval(() => {
+                cursorVisible = !cursorVisible;
+                updateTextArea();
+            }, 500);
+        }
 
-                // Retrieve real-time transcription from the conversation.
-                connection.on("speech_recognition", (speechData) => {
-                    const transcript = speechData.punctuated.transcript;
-                    document.querySelector("#speechRecognition").innerHTML = getLastWords(transcript, 15);;
-                });
+        function stopCursorBlink() {
+            isRecordingActive = false;
+            if (cursorInterval) {
+                clearInterval(cursorInterval);
+                cursorInterval = null;
+            }
+            cursorVisible = false;
+            updateTextArea();
+        }
 
-                // This is a helper method for testing purposes.
-                // It waits 60 seconds before continuing to the next API call.
-                await Symbl.wait(4000000);
+        function updateTextArea() {
+            const transcriptionArea = document.getElementById('transcription');
+            if (!transcriptionArea) return;
 
-                // Stops processing audio, but keeps the WebSocket connection open.
-                await connection.stopProcessing();
+            let fullText = finalizedText;
+            if (currentTurnTranscript && currentTurnTranscript.trim()) {
+                const trimmedTurn = currentTurnTranscript.trim();
+                if (!finalizedText.trim().endsWith(trimmedTurn)) {
+                    if (fullText && !fullText.endsWith(" ") && !fullText.endsWith("\n")) {
+                        fullText += " ";
+                    }
+                    fullText += currentTurnTranscript;
+                }
+            }
+            if (isRecordingActive && cursorVisible) {
+                fullText += " ▌";
+            }
+            transcriptionArea.value = fullText;
+            transcriptionArea.scrollTop = transcriptionArea.scrollHeight;
+        }
 
-                // Closes the WebSocket connection.
-                connection.disconnect();
-                document.getElementById("recording-dot").style.display = "none"; // Hide glowing dot
-            } catch (e) {
-                // Handle errors here.
-                document.getElementById("recording-dot").style.display = "none"; // Hide glowing dot
+        function startPauseMonitor() {
+            lastSpeechTimestamp = Date.now();
+            pauseNewlinesAdded = false;
+            if (pauseMonitorInterval) clearInterval(pauseMonitorInterval);
+
+            pauseMonitorInterval = setInterval(() => {
+                if (!cartesiaWs || cartesiaWs.readyState !== WebSocket.OPEN) return;
+
+                const elapsed = Date.now() - lastSpeechTimestamp;
+                if (elapsed >= 5000 && !pauseNewlinesAdded) {
+                    if (finalizedText && finalizedText.trim().length > 0) {
+                        if (!finalizedText.endsWith("\n\n")) {
+                            if (finalizedText.endsWith("\n")) {
+                                finalizedText += "\n";
+                            } else {
+                                finalizedText += "\n\n";
+                            }
+                            updateTextArea();
+                        }
+                    }
+                    pauseNewlinesAdded = true;
+                }
+            }, 500);
+        }
+
+        function stopPauseMonitor() {
+            if (pauseMonitorInterval) {
+                clearInterval(pauseMonitorInterval);
+                pauseMonitorInterval = null;
             }
         }
 
-        function stopRecording() {
-            // Closes the WebSocket connection.
-            connection.disconnect();
-            document.getElementById("recording-dot").style.display = "none"; // Hide glowing dot
+        async function initRealtime() {
+            try {
+                // Get short-lived Cartesia Access Token from Django backend
+                const tokenResponse = await fetch("/api/realtime_token/");
+                const data = await tokenResponse.json();
+
+                if (data.error) {
+                    console.error("Error fetching Cartesia token:", data.error);
+                    alert("Failed to get Cartesia access token: " + data.error);
+                    return;
+                }
+
+                const accessToken = data.token;
+                const transcriptionArea = document.getElementById('transcription');
+
+                // Preserve any existing text in the textarea (clean any existing cursor)
+                finalizedText = transcriptionArea.value.replace(/ ▌/g, "");
+                currentTurnTranscript = "";
+                if (finalizedText && !finalizedText.endsWith(" ") && !finalizedText.endsWith("\n")) {
+                    finalizedText += " ";
+                }
+
+                // Cartesia Ink 2 STT WebSocket URL with 2000ms turn timeout for fast turn finalization
+                const wsUrl = `wss://api.cartesia.ai/stt/turns/websocket?model=ink-2&encoding=pcm_s16le&sample_rate=16000&cartesia_version=2026-08-14&turn_end_timeout_ms=2000&access_token=${encodeURIComponent(accessToken)}`;
+
+                cartesiaWs = new WebSocket(wsUrl);
+
+                cartesiaWs.onopen = async () => {
+                    console.log("Cartesia Ink 2 STT WebSocket connected successfully");
+                    const micBtn = document.getElementById('mic-record-btn');
+                    if (micBtn) micBtn.classList.add('recording-active');
+                    const txtArea = document.getElementById('transcription');
+                    if (txtArea) txtArea.classList.add('recording-active');
+
+                    startPauseMonitor();
+                    startCursorBlink();
+
+                    try {
+                        // Request microphone access
+                        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+
+                        const source = audioContext.createMediaStreamSource(localStream);
+                        // Buffer size 2048 (~128ms chunks) for low latency
+                        audioProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+
+                        source.connect(audioProcessor);
+                        audioProcessor.connect(audioContext.destination);
+
+                        audioProcessor.onaudioprocess = (e) => {
+                            if (!cartesiaWs || cartesiaWs.readyState !== WebSocket.OPEN) return;
+
+                            const inputFloat32 = e.inputBuffer.getChannelData(0);
+                            const pcm16 = new Int16Array(inputFloat32.length);
+
+                            // Convert float32 [-1, 1] to Int16 PCM [-32768, 32767]
+                            for (let i = 0; i < inputFloat32.length; i++) {
+                                let s = Math.max(-1, Math.min(1, inputFloat32[i]));
+                                pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                            }
+
+                            cartesiaWs.send(pcm16.buffer);
+                        };
+
+                    } catch (micErr) {
+                        console.error("Microphone access error:", micErr);
+                        alert("Microphone access failed: " + micErr.message);
+                        stopTranscription();
+                    }
+                };
+
+                cartesiaWs.onmessage = (e) => {
+                    try {
+                        const event = JSON.parse(e.data);
+
+                        if (event.type === 'turn.update') {
+                            // Live word-by-word streaming transcript update
+                            if (event.transcript !== undefined && event.transcript.trim().length > 0) {
+                                lastSpeechTimestamp = Date.now();
+                                pauseNewlinesAdded = false;
+                                currentTurnTranscript = event.transcript;
+                                updateTextArea();
+                            }
+                        } else if (event.type === 'turn.end' || event.type === 'turn.eager_end') {
+                            // Finalized turn
+                            lastSpeechTimestamp = Date.now();
+                            pauseNewlinesAdded = false;
+                            const textToCommit = (event.transcript !== undefined ? event.transcript : currentTurnTranscript).trim();
+                            if (textToCommit) {
+                                const trimmedFinal = finalizedText.trim();
+                                if (!trimmedFinal.endsWith(textToCommit)) {
+                                    if (finalizedText && !finalizedText.endsWith(" ") && !finalizedText.endsWith("\n")) {
+                                        finalizedText += " ";
+                                    }
+                                    finalizedText += textToCommit + " ";
+                                }
+                            }
+                            currentTurnTranscript = "";
+                            updateTextArea();
+                        } else if (event.type === 'turn.start') {
+                            lastSpeechTimestamp = Date.now();
+                            pauseNewlinesAdded = false;
+                            currentTurnTranscript = "";
+                        } else if (event.type === 'error') {
+                            console.error("Cartesia STT Error Event:", event);
+                        }
+                    } catch (parseErr) {
+                        console.error("Error parsing Cartesia message:", parseErr);
+                    }
+                };
+
+                cartesiaWs.onerror = (err) => {
+                    console.error("Cartesia WebSocket error:", err);
+                };
+
+                cartesiaWs.onclose = () => {
+                    console.log("Cartesia WebSocket connection closed");
+                    stopPauseMonitor();
+                    stopCursorBlink();
+                    const micBtn = document.getElementById('mic-record-btn');
+                    if (micBtn) micBtn.classList.remove('recording-active');
+                    const txtArea = document.getElementById('transcription');
+                    if (txtArea) txtArea.classList.remove('recording-active');
+                };
+
+            } catch (err) {
+                console.error("Cartesia STT initialization failed:", err);
+                stopTranscription();
+            }
         }
 
-        function getLastWords(text, wordCount) {
-            // Split the text into an array of words
-            const words = text.split(" ");
-
-            // Take the last `wordCount` words
-            const lastWords = words.slice(-wordCount);
-
-            // Join the last words back into a string and return
-            return lastWords.join(" ");
+        async function stopTranscription() {
+            stopPauseMonitor();
+            stopCursorBlink();
+            if (cartesiaWs) {
+                if (cartesiaWs.readyState === WebSocket.OPEN) {
+                    try {
+                        cartesiaWs.send(JSON.stringify({ type: "close" }));
+                    } catch (e) {}
+                    cartesiaWs.close();
+                }
+                cartesiaWs = null;
+            }
+            if (audioProcessor) {
+                audioProcessor.disconnect();
+                audioProcessor = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            const micBtn = document.getElementById('mic-record-btn');
+            if (micBtn) micBtn.classList.remove('recording-active');
+            const txtArea = document.getElementById('transcription');
+            if (txtArea) txtArea.classList.remove('recording-active');
         }
+
+        // Expose to global scope for buttons
+        window.live = initRealtime;
+        window.stopTranscription = stopTranscription;
+    </script>
+
+    <script>
+        (function (h, o, t, j, a, r) {
+            h.hj = h.hj || function () { (h.hj.q = h.hj.q || []).push(arguments) };
+            h._hjSettings = { hjid: 5313711, hjsv: 6 };
+            a = o.getElementsByTagName('head')[0];
+            r = o.createElement('script'); r.async = 1;
+            r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
+            a.appendChild(r);
+        })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
     </script>
 </head>
 
 
-<body class="bg-white">
-    <!--PROFILE START-->
-    <div class="card">
-        <!--img-->
-        <div class="rounded-top-3 profile-card-header">
-            <h1 class="m-4 text-white">Round - {{ form.name.value }}</h1>
+<body>
+    <nav class="navbar navbar-expand-lg py-3">
+        <div class="container px-4 d-flex justify-content-between align-items-center">
+            <a class="navbar-brand text-primary fw-bold fs-3 text-decoration-none" href="{% url 'landing' %}" style="letter-spacing: -0.03em; font-family: var(--font-mono);">
+                Judge<span class="text-dark">Assist</span>
+            </a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'profile' %}" class="btn btn-secondary btn-sm">Profile</a>
+                <a href="{% url 'logout' %}" class="btn btn-outline-primary btn-sm">Log out</a>
+            </div>
         </div>
-        <div class="card-body p-md-5">
-            <div class="d-flex flex-column gap-5">
+    </nav>
+
+    <div class="container mt-4 mb-5">
+        <!--PROFILE START-->
+        <div class="card">
+            <!--img-->
+            <div class="rounded-top-3 profile-card-header">
+                <h1 class="mb-0">Round - {{ form.name.value }}</h1>
+            </div>
+            <div class="card-body p-md-5">
                 <div class="d-flex flex-column gap-5">
-                    <div class="d-flex flex-column gap-3">
-                        <div class="d-flex flex-md-row flex-column justify-content-between gap-2">
-                            <!--heading-->
-                            <div class="container mt-5">
-                                <form id="edit-session-form" method="post">
-                                    {% csrf_token %}
-                                    <div class="form-group">
-                                        <label for="name"><strong>Name</strong></label>
-                                        <input type="text" class="form-control" id="name" name="name"
-                                            value="{{ form.name.value }}">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="resolution"><strong>Resolution</strong></label>
-                                        <input type="text" class="form-control" id="resolution" name="resolution"
-                                            value="{{ form.resolution.value }}">
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="aff_speaker1"><strong>Affirmative Speaker 1</strong></label>
-                                                <input type="text" class="form-control" id="aff_speaker1"
-                                                    name="aff_speaker1" value="{{ form.aff_speaker1.value }}">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="aff_speaker2"><strong>Affirmative Speaker 2</strong></label>
-                                                <input type="text" class="form-control" id="aff_speaker2"
-                                                    name="aff_speaker2" value="{{ form.aff_speaker2.value }}">
-                                            </div>
+                    <div class="d-flex flex-column gap-5">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex flex-md-row flex-column justify-content-between gap-2">
+                                <!--heading-->
+                                <div class="container mt-5">
+                                    <form id="edit-session-form" method="post">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <label for="name"><strong>Name</strong></label>
+                                            <input type="text" class="form-control" id="name" name="name"
+                                                value="{{ form.name.value }}">
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="con_speaker1"><strong>Negative Speaker 1</strong></label>
-                                                <input type="text" class="form-control" id="con_speaker1"
-                                                    name="con_speaker1" value="{{ form.con_speaker1.value }}">
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="con_speaker2"><strong>Negative Speaker 2</strong></label>
-                                                <input type="text" class="form-control" id="con_speaker2"
-                                                    name="con_speaker2" value="{{ form.con_speaker2.value }}">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group mt-3">
-                                        <label for="transcription" class="d-flex align-items-center">
-                                            <strong>Live Transcription</strong>
-                                            <span id="recording-dot"
-                                                style="display: none; margin-left: 10px; width: 10px; height: 10px; background-color: red; border-radius: 50%; box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);"></span>
-                                        </label>
-                                        <h6 id="speechRecognition">Live transcriptions to be shown here.</h6>
-                                        <textarea class="form-control" id="transcription" name="transcription" rows="10"
-                                            style="height: 300;"
-                                            value="{{ form.transcription.value }}">{{ form.transcription.value }}</textarea>
-                                        </textarea>
-                                        <!-- Recording Buttons -->
-                                        <div class="d-flex justify-content-center mt-3">
-                                            <button type="button" class="btn btn-danger me-2"
-                                                onclick="javascript: start()">
-                                                <i class="bi bi-mic-fill" style="font-size: 1.0rem;"></i>
-                                            </button>
-
-                                            <button type="button" class="btn btn-secondary me-2"
-                                                onclick="stopRecording()">
-                                                <i class="bi bi-pause-fill" style="font-size: 1.0rem;"></i>
-                                            </button>
+                                        <!-- Edit Session Combo Box -->
+                                        <div class="form-group">
+                                            <label for="event_type"><strong>Event Type</strong></label>
+                                            <select class="form-control" id="event_type" name="event_type">
+                                                <option value="Public Forum">Public Forum</option>
+                                                <option value="Parliamentary Debate">Parliamentary Debate</option>
+                                            </select>
                                         </div>
 
-                                        <label for="results"><strong>Results</strong></label>
-                                        <textarea class="form-control" id="results" name="results" rows="10"
-                                            style="height: 300;">{{ form.results.value }}</textarea>
-                                        </textarea>
-
-                                        <div class="d-flex justify-content-center mt-3">
-                                            <button type="button" class="btn btn-info btn-block"
-                                                onclick="generateResponse()">Generate Results</button>
+                                        <script>
+                                            document.getElementById("event_type").value = "{{ form.event_type.value }}";
+                                        </script>
+                                        <div class="form-group">
+                                            <label for="resolution"><strong>Resolution</strong></label>
+                                            <input type="text" class="form-control" id="resolution" name="resolution"
+                                                value="{{ form.resolution.value }}">
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="aff_speaker1"><strong>Affirmative Speaker
+                                                            1</strong></label>
+                                                    <input type="text" class="form-control" id="aff_speaker1"
+                                                        name="aff_speaker1" value="{{ form.aff_speaker1.value }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="aff_speaker2"><strong>Affirmative Speaker
+                                                            2</strong></label>
+                                                    <input type="text" class="form-control" id="aff_speaker2"
+                                                        name="aff_speaker2" value="{{ form.aff_speaker2.value }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="con_speaker1"><strong>Negative Speaker
+                                                            1</strong></label>
+                                                    <input type="text" class="form-control" id="con_speaker1"
+                                                        name="con_speaker1" value="{{ form.con_speaker1.value }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="con_speaker2"><strong>Negative Speaker
+                                                            2</strong></label>
+                                                    <input type="text" class="form-control" id="con_speaker2"
+                                                        name="con_speaker2" value="{{ form.con_speaker2.value }}">
+                                                </div>
+                                            </div>
                                         </div>
 
+                                        <div class="form-group mt-3">
+                                            <label for="transcription" class="d-flex align-items-center">
+                                                <strong>Live Transcription</strong>
+                                            </label>
+                                            <textarea class="form-control" id="transcription" name="transcription"
+                                                rows="10" style="height: 300;"
+                                                value="{{ form.transcription.value }}">{{ form.transcription.value }}</textarea>
+                                            <!-- Recording Buttons -->
+                                            <div class="d-flex justify-content-center mt-3">
+                                                <button type="button" class="btn btn-accent me-2" id="mic-record-btn" onclick="live()">
+                                                    <i class="bi bi-mic-fill" style="font-size: 1.0rem;"></i>
+                                                </button>
 
-                                    </div>
+                                                <button type="button" class="btn btn-secondary me-2"
+                                                    onclick="stopTranscription()">
+                                                    <i class="bi bi-pause-fill" style="font-size: 1.0rem;"></i>
+                                                </button>
+                                            </div>
 
-                                    <div class="text-center mt-4">
-                                        <button type="submit" class="btn btn-success btn-block mt-3">Save
-                                            Changes</button>
-                                        <button type="button" class="btn btn-secondary btn-block mt-3">
-                                            <a href="{% url 'profile' %}" class="text-white">Back to
-                                                Profile</a></button>
-                                    </div>
+                                            <div class="form-group">
+                                                <strong>Paradigm</strong>
+                                                <ul id="paradigm" class="list-group"></ul>
+                                                <span id="toggle-more" class="toggle-more">Show more</span>
+                                            </div>
 
-                                </form>
+                                            <div class="d-flex justify-content-center mt-3">
+                                                <button type="button" class="btn btn-primary btn-block"
+                                                    id="generate-btn" onclick="generateResponse()">Generate
+                                                    Results</button>
+                                            </div>
+                                            <div class="loading-spinner" id="loading-spinner">
+                                                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                            </div>
+
+                                            <label for="results"><strong>Results</strong></label>
+                                            <textarea class="form-control" id="results" name="results" rows="10"
+                                                style="height: 300;">{{ form.results.value }}</textarea>
+                                            </textarea>
+
+                                        </div>
+
+                                        <div class="text-center mt-4">
+                                            <button type="submit" class="btn btn-primary btn-block mt-3">Save
+                                                Changes</button>
+                                            <a href="{% url 'profile' %}"
+                                                class="btn btn-outline-primary btn-block mt-3">Back to
+                                                Profile</a>
+                                        </div>
+
+                                    </form>
+
+                                </div>
 
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -204,6 +483,10 @@
         </div>
     </div>
     <!--PROFILE END-->
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
         function getCookie(name) {
@@ -223,8 +506,28 @@
         }
         const csrftoken = getCookie('csrftoken');
 
+        function generateResponse_test() {
+            var spinner = document.getElementById("loading-spinner");
+            var button = document.getElementById("generate-btn");
+
+            button.disabled = true;
+            spinner.style.display = "block";
+
+            setTimeout(function () {
+                spinner.style.display = "none";
+                button.disabled = false;
+            }, 2000); // Simulate API call
+        }
+
         function generateResponse() {
+            var spinner = document.getElementById("loading-spinner");
+            var button = document.getElementById("generate-btn");
+
+            button.disabled = true;
+            spinner.style.display = "block";
+
             let data_detail = {
+                'event_type': $('#event_type').val(),
                 'resolution': $('#resolution').val(),
                 'aff_speaker1': $('#aff_speaker1').val(),
                 'aff_speaker2': $('#aff_speaker2').val(),
@@ -245,7 +548,8 @@
 
             let data = {
                 'resolution': $('#resolution').val(),
-                'transcription': $('#transcription').val(),
+                'transcription': ($('#transcription').val() || '').replace(/ ▌/g, ''),
+                'event_type': $('#event_type').val(),
             }
 
             $.ajax({
@@ -256,6 +560,9 @@
                 headers: { 'X-CSRFToken': csrftoken },
                 success: function (response) {
                     $('#results').val(response.results);
+
+                    spinner.style.display = "none";
+                    button.disabled = false;
                 }
             });
 
@@ -266,8 +573,69 @@
                 // Render the HTML in a container
                 document.getElementById('markdownPreview').innerHTML = htmlContent;
             }
+
+
         }
     </script>
+    <script>
+        function updateParadigm() {
+            var paradigmList = document.getElementById("paradigm");
+            paradigmList.innerHTML = "";
+            var resolution = document.getElementById("resolution").value || "[resolution]";
+            var eventType = document.getElementById("event_type").value;
+            var items = [];
+
+
+            if (eventType === "Public Forum") {
+                items = [
+                    "Argumentation is focused on the resolution, where the Affirmative side is in support of said resolution and the Negative side is in opposition",
+                    "Each speech presents independent argumentation for each side, refutations against the opposing side, defenses against such refutations, and comparisons between the implications of each argument",
+                    "The round is structured by two constructives, two rebuttals, two summaries, and two final foci; disregard any new evidence or arguments presented in the last 4 speeches: these speeches should be cross applications or clarifications of arguments already made in the round",
+                    "Upon completion, provide feedback for each speech, give a final decision on the side that won the debate, and explain your rationale for the decision",
+                    "There should be specific arguments that you felt compelled to vote on for a side to win the round, no decision should be made for general strategy or eloquence"
+                ];
+            } else if (eventType === "Parliamentary Debate") {
+                items = [
+                    "The round is structured by four constructives and two rebuttals: constructives are speeches in which debates occur with new information and responses and rebuttals are speeches in which the main issues of the debate are weighed to show who wins. New information is not allowed in rebuttal speeches.",
+                    "The format of the round is first affirmative construction (7 minutes), first negative constructive (8 minutes), second affirmative constructive (8 minutes), second negative constructive (8 minutes), negative rebuttal (4 minutes), affirmative rebuttal (5 minutes).",
+                    "POIs, which are questions that examine the cases of the speaking side can be asked during constructive speeches. These interrupt the time and continue within the time. They are not allowed in the rebuttal speeches.",
+                    "POOs, which pause time are used to point out new information being brought up in the rebuttal speeches, which violates the rules. It is up to you, the judge, to determine whether this information was previously mentioned or is new.",
+                    "The criterion on which the round should be weighed will be provided by the debaters, whether it be a fact, policy, or value round (the definition of these rounds will also be provided). Please go with the framework that the debaters agree on, and if the weighing mechanism is contested, choose what seems most logical to you based on their arguments.",
+                    "Although some evidence can be cited, unless contested, all points provided by debaters should be accepted as fact. However, detailed statistics and numbers should enhance the validity of points proposed by either side.",
+                    "In Parli, the debaters must point out anything for it to be valid, so only take rebuttals and dropped points if the debaters point them out.",
+                    "At the end of the round, please look over everything that has been said and make a decision. Give feedback on missed points of the debate, good areas, and analyze each speech so that speakers can see what they did good and what they can do better."
+                ];
+            }
+
+            items.forEach(function (text, index) {
+                var li = document.createElement("li");
+                li.className = "list-group-item";
+                li.textContent = text;
+                if (index >= 3) li.style.display = "none";
+                paradigmList.appendChild(li);
+            });
+
+            // Reset toggle button when event type is changed
+            document.getElementById("toggle-more").textContent = "Show more";
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("event_type").addEventListener("change", updateParadigm);
+            updateParadigm();
+            document.getElementById("toggle-more").addEventListener("click", function () {
+                var items = document.querySelectorAll("#paradigm .list-group-item");
+                var isExpanded = items[3].style.display === "list-item";
+
+                items.forEach(function (item, index) {
+                    if (index >= 3) {
+                        item.style.display = isExpanded ? "none" : "list-item";
+                    }
+                });
+                document.getElementById("toggle-more").textContent = isExpanded ? "Show more" : "Show less";
+            });
+        });
+    </script>
+
     <style>
         #recording-dot {
             animation: glow 1s infinite;
@@ -275,18 +643,22 @@
 
         @keyframes glow {
             0% {
-                box-shadow: 0 0 5px rgba(215, 136, 136, 0.5);
+                box-shadow: 0 0 5px rgba(253, 230, 138, 0.5);
+                /* Amber-ish light */
             }
 
             50% {
-                box-shadow: 0 0 15px rgb(134, 40, 40);
+                box-shadow: 0 0 15px rgb(146, 64, 14);
+                /* Deep rust */
             }
 
             100% {
-                box-shadow: 0 0 5px rgba(171, 5, 5, 0.5);
+                box-shadow: 0 0 5px rgba(245, 158, 11, 0.5);
+                /* Amber 500 */
             }
         }
     </style>
+
     <!-- Theme JS -->
     <script src="{% static '/assets/js/theme.min.js' %}"></script>
     <script src="{% static '/assets/js/vendors/sidebarMenu.js' %}"></script>

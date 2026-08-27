@@ -1,6 +1,6 @@
 runtime: python312  # or any other version you are using
 
-entrypoint: gunicorn -b :$PORT judgejune.wsgi:application --workers=1 --log-level debug
+entrypoint: gunicorn -b :$PORT judgejune.wsgi:application --workers=1 --log-level debug --timeout 300
 
 instance_class: F4_1G  # Upgrade to an instance with more memory (2GB)
 
@@ -13,3 +13,6 @@ handlers:
 
 env_variables:
   APPENGINE_URL: https://judgejune.wl.r.appspot.com
+
+readiness_check:
+  app_start_timeout_sec: 1800

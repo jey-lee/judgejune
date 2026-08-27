@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Support & Help Center | Judge Assist</title>
+    {% load static %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{% static 'assets/css/theme.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=999">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg py-3">
+        <div class="container px-4 d-flex justify-content-between align-items-center">
+            <a class="navbar-brand text-primary fw-bold fs-3 text-decoration-none" href="{% url 'landing' %}" style="letter-spacing: -0.03em;">
+                Judge<span class="text-dark">Assist</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-5 mb-5" style="max-width: 800px;">
+        <div class="card p-4 p-md-5">
+            <h1 class="fw-bold mb-3 text-primary">Support & Help Center</h1>
+            <p class="text-secondary mb-4">Find quick answers or get in touch with the Judge Assist support team.</p>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card p-4 h-100 border">
+                        <h5 class="fw-bold text-primary mb-2">Mic / STT Issues?</h5>
+                        <p class="small text-muted mb-0">Ensure browser microphone permissions are enabled for Cartesia Ink 2 real-time streaming.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-4 h-100 border">
+                        <h5 class="fw-bold text-primary mb-2">Ballot Generation</h5>
+                        <p class="small text-muted mb-0">GPT-5.6 generates decisions based on the filled speech sections and real-time transcript flow.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h4 class="fw-bold mt-3 mb-3">Contact Support</h4>
+            <p class="text-muted">Need help with your account or a specific debate session? Reach out at <a href="mailto:support@judgeassist.com" class="text-primary fw-bold">support@judgeassist.com</a>.</p>
+
+            <div class="mt-4 text-center">
+                <a href="{% url 'landing' %}" class="btn btn-outline-primary px-4 py-2">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer py-4 mt-auto">
+        <div class="container px-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 border-top pt-4">
+                <span class="text-muted small">© <span id="copyright"><script>document.getElementById('copyright').appendChild(document.createTextNode(new Date().getFullYear()))</script></span> Judge Assist. All Rights Reserved.</span>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'privacy' %}" class="text-secondary text-decoration-none small">Privacy</a>
+                    <a href="{% url 'terms' %}" class="text-secondary text-decoration-none small">Terms</a>
+                    <a href="{% url 'feedback' %}" class="text-secondary text-decoration-none small">Feedback</a>
+                    <a href="{% url 'support' %}" class="text-secondary text-decoration-none small">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

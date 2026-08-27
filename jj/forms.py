@@ -44,7 +44,7 @@ class SessionForm(forms.ModelForm):
     class Meta:
         model = Session
         fields = [
-            'name', 'resolution', 'details',
+            'name', 'event_type', 'resolution', 'details',
             'aff_speaker1', 'aff_speaker2',
             'con_speaker1', 'con_speaker2',
             'constructive1', 'constructive2',

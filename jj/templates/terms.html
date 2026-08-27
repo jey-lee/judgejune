@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Terms of Service | Judge Assist</title>
+    {% load static %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{% static 'assets/css/theme.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=999">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg py-3">
+        <div class="container px-4 d-flex justify-content-between align-items-center">
+            <a class="navbar-brand text-primary fw-bold fs-3 text-decoration-none" href="{% url 'landing' %}" style="letter-spacing: -0.03em;">
+                Judge<span class="text-dark">Assist</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-5 mb-5" style="max-width: 840px;">
+        <div class="card p-4 p-md-5 shadow-sm">
+            <h1 class="fw-bold mb-3 text-primary">Terms of Service</h1>
+            <p class="text-muted mb-4">Last Updated: August 2026</p>
+
+            <p class="lead mb-4">
+                Welcome to <strong>Judge Assist</strong>. By registering an account, accessing, or using our real-time speech transcription and AI-assisted debate judging platform, you agree to be bound by these Terms of Service.
+            </p>
+
+            <hr class="my-4">
+
+            <h4 class="fw-bold mt-4 text-dark">1. Acceptance of Terms</h4>
+            <p>
+                These Terms of Service constitute a legally binding agreement between you and Judge Assist. If you are using the service on behalf of an academic institution, debate club, or tournament organization, you represent that you have authority to bind that entity to these terms.
+            </p>
+
+            <h4 class="fw-bold mt-4 text-dark">2. Service Scope & AI Assistant Disclaimers</h4>
+            <p>
+                Judge Assist provides live audio speech-to-text streaming (powered by Cartesia Ink 2 STT) and automated ballot reasoning (powered by GPT-5.6):
+            </p>
+            <ul>
+                <li><strong>Assistive Role:</strong> AI-generated transcriptions, argument flows, and ballot decisions are designed solely to assist human debate judges.</li>
+                <li><strong>Final Authority:</strong> Presiding human judges retain complete sole discretion over official tournament ballot decisions, win/loss calls, and speaker point assignments.</li>
+                <li><strong>No Tournament Liability:</strong> Judge Assist is not responsible for official tournament decisions, pairing adjustments, or ballot rankings.</li>
+            </ul>
+
+            <h4 class="fw-bold mt-4 text-dark">3. User Accounts & Security</h4>
+            <p>
+                You are responsible for maintaining the confidentiality of your account login credentials. Any activity conducted through your account is your responsibility. You agree to notify us immediately of any unauthorized access.
+            </p>
+
+            <h4 class="fw-bold mt-4 text-dark">4. Acceptable Use & Debate Ethics</h4>
+            <p>When using Judge Assist, you agree to adhere to academic integrity standards and tournament rules (e.g., NSDA, APDA, BP, PF guidelines):</p>
+            <ul>
+                <li>You must comply with all local recording consent laws and tournament rules regarding audio capture during debate speeches.</li>
+                <li>You agree not to attempt to reverse-engineer, exploit, or bypass session API authentication limits.</li>
+                <li>You agree not to upload malicious payloads or engage in abusive platform behavior.</li>
+            </ul>
+
+            <h4 class="fw-bold mt-4 text-dark">5. Intellectual Property & User Content</h4>
+            <p>
+                You retain full ownership of all debate notes, speech flow inputs, and custom judging criteria submitted to your account. Judge Assist retains all rights, titles, and intellectual property in our platform software, branding, and dynamic UI systems.
+            </p>
+
+            <h4 class="fw-bold mt-4 text-dark">6. Warranty Disclaimers & Service Availability</h4>
+            <p>
+                Judge Assist is provided on an <strong>"as is"</strong> and <strong>"as available"</strong> basis. While we maintain 99.9% uptime, we do not guarantee uninterrupted real-time audio streaming in the event of local client network latency or third-party API outages.
+            </p>
+
+            <h4 class="fw-bold mt-4 text-dark">7. Termination of Service</h4>
+            <p>
+                We reserve the right to suspend or terminate accounts that violate these terms or engage in unauthorized platform misuse without prior notice.
+            </p>
+
+            <h4 class="fw-bold mt-4 text-dark">8. Legal & Terms Contact</h4>
+            <p>
+                For questions or inquiries regarding these Terms of Service, please contact our legal team at <a href="mailto:legal@judgeassist.com" class="text-primary fw-bold">legal@judgeassist.com</a>.
+            </p>
+
+            <div class="mt-5 text-center">
+                <a href="{% url 'landing' %}" class="btn btn-outline-primary px-4 py-2">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer py-4 mt-auto">
+        <div class="container px-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 border-top pt-4">
+                <span class="text-muted small">© <span id="copyright"><script>document.getElementById('copyright').appendChild(document.createTextNode(new Date().getFullYear()))</script></span> Judge Assist. All Rights Reserved.</span>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'privacy' %}" class="text-secondary text-decoration-none small">Privacy</a>
+                    <a href="{% url 'terms' %}" class="text-secondary text-decoration-none small">Terms</a>
+                    <a href="{% url 'feedback' %}" class="text-secondary text-decoration-none small">Feedback</a>
+                    <a href="{% url 'support' %}" class="text-secondary text-decoration-none small">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

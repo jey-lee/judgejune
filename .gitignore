@@ -32,5 +32,9 @@ bizcoach/static/assets/*
 # MacOS
 .DS_Store
 
+# Node / JS
+node_modules/
+package-lock.json
+
 # Windows
 thumbs.db

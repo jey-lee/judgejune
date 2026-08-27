@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Feedback | Judge Assist</title>
+    {% load static %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{% static 'assets/css/theme.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=999">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg py-3">
+        <div class="container px-4 d-flex justify-content-between align-items-center">
+            <a class="navbar-brand text-primary fw-bold fs-3 text-decoration-none" href="{% url 'landing' %}" style="letter-spacing: -0.03em;">
+                Judge<span class="text-dark">Assist</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-5 mb-5" style="max-width: 680px;">
+        <div class="card p-4 p-md-5">
+            <h1 class="fw-bold mb-3 text-primary">Feedback</h1>
+            <p class="text-secondary mb-4">We value your input! Let us know how we can make Judge Assist better for your debate rounds.</p>
+
+            <form method="post" onsubmit="event.preventDefault(); alert('Thank you for your feedback!');">
+                <div class="mb-3">
+                    <label class="form-label fw-bold" for="fb-topic">Feedback Topic</label>
+                    <select class="form-control" id="fb-topic">
+                        <option>Real-Time STT Accuracy</option>
+                        <option>GPT-5.6 Ballot Reasoning</option>
+                        <option>UI & Design Suggestions</option>
+                        <option>Feature Request</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-bold" for="fb-message">Your Comments</label>
+                    <textarea class="form-control" id="fb-message" rows="5" placeholder="Share your experience or suggestions..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3">Submit Feedback</button>
+                <div class="text-center">
+                    <a href="{% url 'landing' %}" class="btn btn-outline-primary btn-sm">Back to Home</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer py-4 mt-auto">
+        <div class="container px-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 border-top pt-4">
+                <span class="text-muted small">© <span id="copyright"><script>document.getElementById('copyright').appendChild(document.createTextNode(new Date().getFullYear()))</script></span> Judge Assist. All Rights Reserved.</span>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'privacy' %}" class="text-secondary text-decoration-none small">Privacy</a>
+                    <a href="{% url 'terms' %}" class="text-secondary text-decoration-none small">Terms</a>
+                    <a href="{% url 'feedback' %}" class="text-secondary text-decoration-none small">Feedback</a>
+                    <a href="{% url 'support' %}" class="text-secondary text-decoration-none small">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

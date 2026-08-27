@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Realtime Transcription (GCP Speech-to-Text)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    #transcript {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      min-height: 200px;
+      white-space: pre-wrap;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🎙️ Live Transcription</h2>
+
+<button id="start">Start Listening</button>
+<button id="stop" disabled>Stop Listening</button>
+
+<div id="transcript"></div>
+
+<script>
+let mediaRecorder;
+let socket;
+
+document.getElementById('start').onclick = async () => {
+  document.getElementById('start').disabled = true;
+  document.getElementById('stop').disabled = false;
+  document.getElementById('transcript').textContent = "";
+
+  socket = new WebSocket('ws://localhost:8000/ws/transcribe/');
+
+  socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.transcript) {
+      document.getElementById('transcript').textContent += data.transcript + "\n";
+    }
+  };
+
+  socket.onopen = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+    mediaRecorder.addEventListener('dataavailable', (event) => {
+      if (event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+        socket.send(event.data);
+      }
+    });
+
+    mediaRecorder.start(250); // record in 250ms chunks
+  };
+
+  socket.onerror = (error) => {
+    console.error('WebSocket error:', error);
+  };
+
+  socket.onclose = () => {
+    console.log('WebSocket closed');
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+  };
+};
+
+document.getElementById('stop').onclick = () => {
+  document.getElementById('start').disabled = false;
+  document.getElementById('stop').disabled = true;
+
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.close();
+  }
+};
+</script>
+
+</body>
+</html>

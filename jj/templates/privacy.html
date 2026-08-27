@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Privacy Policy | Judge Assist</title>
+    {% load static %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{% static 'assets/css/theme.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=999">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg py-3">
+        <div class="container px-4 d-flex justify-content-between align-items-center">
+            <a class="navbar-brand text-primary fw-bold fs-3 text-decoration-none" href="{% url 'landing' %}" style="letter-spacing: -0.03em;">
+                Judge<span class="text-dark">Assist</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-5 mb-5" style="max-width: 840px;">
+        <div class="card p-4 p-md-5 shadow-sm">
+            <h1 class="fw-bold mb-3 text-primary">Privacy Policy</h1>
+            <p class="text-muted mb-4">Last Updated: August 2026</p>
+
+            <p class="lead mb-4">
+                At <strong>Judge Assist</strong>, we take the privacy of judges, debaters, coaches, and academic institutions seriously. This Privacy Policy details how we handle speech streams, debate metadata, and AI-assisted ballot generation.
+            </p>
+
+            <hr class="my-4">
+
+            <h4 class="fw-bold mt-4 text-dark">1. Information We Collect</h4>
+            <p>We collect only the essential data necessary to deliver real-time speech transcription, flow tracking, and ballot reasoning:</p>
+            <ul>
+                <li><strong>Account Credentials:</strong> Username, email address, and encrypted passwords upon signup.</li>
+                <li><strong>Debate Round Metadata:</strong> Event type (e.g., Public Forum, Parliamentary Debate), resolution text, speaker names, and speech flow notes created by the judge.</li>
+                <li><strong>Ephemeral Audio Streams:</strong> Real-time microphone audio PCM chunks transmitted during active live transcription sessions.</li>
+            </ul>
+
+            <h4 class="fw-bold mt-4 text-dark">2. Real-Time Speech Processing & Cartesia Ink 2 STT</h4>
+            <p>Live speech transcription is powered by Cartesia Ink 2 low-latency WebSockets:</p>
+            <ul>
+                <li>Audio buffers (16kHz PCM_S16LE) are processed strictly in <strong>ephemeral memory</strong> to generate word-by-word streaming text.</li>
+                <li><strong>Zero Permanent Audio Retention:</strong> Raw microphone audio is never written to disk or used for training underlying speech models. Once the WebSocket turn ends, transient audio buffers are immediately discarded.</li>
+            </ul>
+
+            <h4 class="fw-bold mt-4 text-dark">3. AI Ballot Generation & GPT-5.6 Reasoning</h4>
+            <p>When you click <em>"Generate Results"</em>, the text transcript and round flow are transmitted over TLS-encrypted APIs to GPT-5.6:</p>
+            <ul>
+                <li>Prompts contain only text arguments, resolution details, and judging criteria.</li>
+                <li><strong>No Model Training:</strong> Your round transcripts and debate ballots are processed under enterprise Zero-Data-Retention (ZDR) clauses and are not used to train AI models.</li>
+            </ul>
+
+            <h4 class="fw-bold mt-4 text-dark">4. Data Security & Storage</h4>
+            <p>All data in transit is protected using <strong>TLS 1.3 encryption</strong>, and stored databases enforce row-level session authorization so only authenticated round creators can access their sessions.</p>
+
+            <h4 class="fw-bold mt-4 text-dark">5. User Control & Instant Data Deletion</h4>
+            <p>You maintain 100% control over your data. When you delete a round or session from your profile dashboard, all associated transcripts, results, and speaker point notes are permanently deleted from our database instantly.</p>
+
+            <h4 class="fw-bold mt-4 text-dark">6. Third-Party Service Providers</h4>
+            <p>We work exclusively with vetted infrastructure providers who comply with high privacy standards:</p>
+            <ul>
+                <li><strong>Cartesia AI:</strong> Real-time WebSocket speech-to-text processing.</li>
+                <li><strong>OpenAI:</strong> GPT-5.6 / o3-mini automated ballot reasoning.</li>
+            </ul>
+
+            <h4 class="fw-bold mt-4 text-dark">7. Contact & Privacy Inquiries</h4>
+            <p>If you have questions regarding this policy or data protection, please email our privacy team at <a href="mailto:privacy@judgeassist.com" class="text-primary fw-bold">privacy@judgeassist.com</a>.</p>
+
+            <div class="mt-5 text-center">
+                <a href="{% url 'landing' %}" class="btn btn-outline-primary px-4 py-2">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer py-4 mt-auto">
+        <div class="container px-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 border-top pt-4">
+                <span class="text-muted small">© <span id="copyright"><script>document.getElementById('copyright').appendChild(document.createTextNode(new Date().getFullYear()))</script></span> Judge Assist. All Rights Reserved.</span>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'privacy' %}" class="text-secondary text-decoration-none small">Privacy</a>
+                    <a href="{% url 'terms' %}" class="text-secondary text-decoration-none small">Terms</a>
+                    <a href="{% url 'feedback' %}" class="text-secondary text-decoration-none small">Feedback</a>
+                    <a href="{% url 'support' %}" class="text-secondary text-decoration-none small">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

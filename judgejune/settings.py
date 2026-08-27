@@ -14,6 +14,8 @@ GAE_INSTANCE = os.getenv('GAE_INSTANCE')
 OPENAI_KEY = os.getenv('OPENAI_KEY')
 SYMBL_APPID = os.getenv('SYMBL_APPID')
 SYMBL_APPSECRET = os.getenv('SYMBL_APPSECRET')
+CARTESIA_API_KEY = os.getenv('CARTESIA_API_KEY')
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'jj',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -100,15 +103,8 @@ else:
    DEBUG = True
    DATABASES = {
        'default': {
-           'ENGINE': 'django.db.backends.mysql',
-           'NAME': env('DB_NAME'),
-           'USER': env('DB_USER'),
-           'PASSWORD': env('DB_PASSWORD'),
-           'HOST': '',  # Leave empty for Unix socket
-           'PORT': '',  # Leave empty for Unix socket
-           'OPTIONS': {
-               'unix_socket': '/tmp/cloudsql/judgejune:us-west2:judgejune-db',
-           },
+           'ENGINE': 'django.db.backends.sqlite3',
+           'NAME': BASE_DIR / 'db.sqlite3',
        }
    }
 
@@ -149,10 +145,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 
 STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
 ]
 
 # Default primary key field type

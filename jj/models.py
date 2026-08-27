@@ -2,11 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Session(models.Model):
+    DEBATE_TYPES = [
+        ('Public Forum', 'Public Forum'),
+        ('Parliamentary Debate', 'Parliamentary Debate')
+    ]
+
     name = models.CharField(max_length=255, blank=True, default='')
     resolution = models.CharField(max_length=255, blank=True, default='')
     details = models.TextField(blank=True, default='')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    event_type = models.CharField(max_length=50, choices=DEBATE_TYPES, default='Public Forum')
     
     aff_speaker1 = models.CharField(max_length=255, blank=True, default='')
     aff_speaker2 = models.CharField(max_length=255, blank=True, default='')
